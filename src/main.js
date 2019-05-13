@@ -12,15 +12,11 @@ Vue.use(BootstrapVue)
 //Router
 import router from './router.js'
 
-//vuex store
+//vuex
 import store from './store/store.js'
 
 //firebase
 import './plugins/firebase.js'
-
-//QR
-import VueQriously from 'vue-qriously'
-Vue.use(VueQriously)
 
 Vue.config.productionTip = false;
 

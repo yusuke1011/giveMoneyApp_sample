@@ -2,11 +2,9 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 //ルート用のcomponent
-import Home from '@/views/Home.vue'
-import Login from '@/views/Login.vue'
-import Signup from '@/views/Signup.vue'
+import SignIn from '@/views/SignIn.vue'
+import SignUp from '@/views/SignUp.vue'
 import Index from '@/views/Index.vue'
-import Result from '@/views/Result.vue'
 
 //プラグインとして登録
 Vue.use(VueRouter);
@@ -18,9 +16,8 @@ const router = new VueRouter({
   //ルーティングの定義
   routes: [
     { path: '/', component: Index },
-    { path: '/login', component: Login },
-    { path: '/signup', component: Signup },
-    { path: '/result', component: Result}
+    { path: '/signIn', component: SignIn },
+    { path: '/signUp', component: SignUp }
   ]
 })
 

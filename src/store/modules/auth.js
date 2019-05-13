@@ -1,13 +1,19 @@
 const state = {
-    user: ''
+    id: '',
+    user: '',
+    type: 0
 }
 
 const mutations = {
-    login(state, payload) {
-        state.user = payload.user
+    signIn(state, payload) {
+        state.id = payload.id;
+        state.user = payload.user;
+        state.type = payload.type;
     },
     signOut(state) {
-        state.user = ''
+        state.id = '';
+        state.user = '';
+        state.type = 0;
     }
 }
 

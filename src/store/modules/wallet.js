@@ -1,10 +1,10 @@
 const state = {
-    imgUrl: ''
+    amount: ''
 }
 
 const mutations = {
-    imgStore(state, payload) {
-        state.imgUrl = payload.imgUrl
+    setWallet(state, payload) {
+        state.amount = payload.amount
     }
 }
 
