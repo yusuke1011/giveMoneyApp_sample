@@ -122,7 +122,8 @@ export default {
       this.selectedUser = ''
     },
     async sendMoney() {
-      if(this.sendAmount < this.amount) {
+      const sendAmount = parseInt(this.sendAmount);
+      if(sendAmount < this.amount) {
 
         let querySnapshot = await db.collection('wallets').where('user_id', '==', this.selectedUser).get()
         .catch(err => {
@@ -143,21 +144,23 @@ export default {
           const recieverDoc = await transaction.get(recieverDocRef);
           //指定金額分加算
           console.log(recieverDoc.data())
-          const newAmount = recieverDoc.data().amount + this.sendAmount;
+          const newAmount = recieverDoc.data().amount + sendAmount;
           //更新
           await transaction.update(recieverDocRef, {amount: newAmount});
         });
 
-        querySnapshot = await db.collection('wallets').where('user_id', '==', this.myUserId).get()
+        const myUserId = this.$store.state.auth.id;
+
+        querySnapshot = await db.collection('wallets').where('user_id', '==', myUserId).get()
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message})
         });
         const senderDocData = querySnapshot.docs.map(doc => {
-          return doc.data()
+          return doc
         });
         const senderDocId = senderDocData[0].id;
+                console.log(senderDocId)
 
-        const myUserId = this.$store.state.auth.id;
         //対象ドキュメントの参照を取得
         const senderDocRef = db.collection('wallets').doc(senderDocId)
 
@@ -165,10 +168,26 @@ export default {
           //対象ドキュメントを取得
           const senderDoc = await transaction.get(senderDocRef);
           //指定金額分加算
-          const newAmount = senderDoc.data().amount + this.sendAmount;
+          const newAmount = senderDoc.data().amount - sendAmount;
           //更新
           await transaction.update(senderDocRef, {amount: newAmount});
         });
+
+        //wallet情報の取得
+        querySnapshot = await db.collection('wallets').where('user_id', '==', myUserId).get()
+        .catch(err => {
+          this.$store.commit('setErr', {errMsg: err.message})
+        });
+        const walletData = querySnapshot.docs.map(doc => {
+          return doc.data()
+        });
+
+        this.$store.commit('setWallet', {
+          amount: walletData[0].amount
+        });
+
+        this.closeModal()
+
       }
       else {
         this.$store.commit('setErr', {errMsg: '有効な値を入力してください'})
