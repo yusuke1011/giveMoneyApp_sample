@@ -99,10 +99,14 @@ export default {
   },
   methods: {
     async giveMoney(user) {
+      //モーダルウィンドウを表示
       this.sendModal = true;
+
+      //選択されたユーザ情報を保存
       this.selectedUser = user;
     },
     async getWallet(user) {
+      //モーダルウィンドウを表示
       this.walletModal = true;
 
       //wallet残高の取得
@@ -126,7 +130,8 @@ export default {
       const senderUserId = this.myUserId;
       const receiverUserId = this.selectedUser.user_id;
       const sendAmount = parseInt(this.sendAmount);
-      
+
+      //受け渡す金額が残高より少ない場合
       if (sendAmount < this.myWalletAmount) {
         //wallet残高の取得
         const walletData = await getData(db, 'wallets', ["user_id", "==", receiverUserId])
@@ -135,39 +140,50 @@ export default {
         });
         const receiverWalletAmount = walletData[0].amount;
 
+        //更新後の値を算出
         const newSenderWalletAmount = this.myWalletAmount - sendAmount;
         const newReceiverWalletAmount = receiverWalletAmount + sendAmount;
 
+        //受け取り側の更新
         putData(db, 'wallets', ["user_id", "==", receiverUserId], { amount: newReceiverWalletAmount })
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message});
         });
 
+        //受け渡し側の更新
         putData(db, 'wallets', ["user_id", "==", senderUserId], { amount: newSenderWalletAmount })
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message});
         });
 
+        //Vuexストアの更新
         this.$store.commit("setWallet", {
           amount: newSenderWalletAmount
         });
       }
+      //受け渡す金額が残高より多い場合、文字列が入力された場合など
       else {
         this.$store.commit("setErr", { errMsg: "有効な値を入力してください" });
       }
 
+      //モーダルウィンドウを閉じる
       this.closeModal();
     },
     signOut() {
+      //サインアウト処理
       firebase.auth().onAuthStateChanged(async user => {
-        //ログイン情報ありの場合
+        //ログイン情報ありの場合のみサインアウト実行
         if(user){
           await firebase.auth().signOut()
           .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message});
           });
         }
+
+        //Vuexストアの更新
         this.$store.commit('signOut');
+
+        //signIn画面へ遷移
         this.$router.push('/signIn');
       });
     }
