@@ -33,6 +33,7 @@ import ErrMsg from "../components/ErrMsg";
 import "../lib/definition/enum.js";
 import firebase from "firebase";
 import { db } from "../plugins/firebase";
+import { getData } from '../lib/definition/function.js';
 
 export default {
   name: "App",
@@ -54,35 +55,7 @@ export default {
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
       });
-
-      //user情報取得
-      let querySnapshot = await db.collection('users').where('user_email', '==', this.email).get()
-      .catch(err => {
-        this.$store.commit('setErr', {errMsg: err.message})
-      });
-      const userData = querySnapshot.docs.map(doc => {
-        return doc.data()
-      });
-
-      //wallet情報の取得
-      querySnapshot = await db.collection('wallets').where('user_id', '==', userData[0].user_id).get()
-      .catch(err => {
-        this.$store.commit('setErr', {errMsg: err.message})
-      });
-      const walletData = querySnapshot.docs.map(doc => {
-        return doc.data()
-      });
       
-      //vuexストアへ保存
-      this.$store.commit('signIn', {
-        user: userData[0].user_name,
-        id: userData[0].user_id,
-        type: userData[0].user_type
-      });
-
-      this.$store.commit('setWallet', {
-        amount: walletData[0].amount
-      });
       //index画面へ遷移
       this.$router.push('/');
     }

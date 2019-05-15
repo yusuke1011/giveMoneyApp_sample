@@ -1,8 +1,8 @@
 //定数の定義
-export const DefaultAmount = 1000;
+export const DEFAULT_AMOUNT = 1000;
 
 //列挙体の定義
-export const UserType = {
-    Admin: 0,
-    General: 1
+export const USER_TYPE = {
+    ADMIN: 0,
+    GENERAL: 1
 };

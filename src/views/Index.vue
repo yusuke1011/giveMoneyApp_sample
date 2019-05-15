@@ -2,8 +2,8 @@
   <div id="app">
     <ErrMsg/>
     <div class="user-info-area">
-      <div>{{userName}}さんようこそ！！</div>
-      <div>残高：{{amount}}</div>
+      <div>{{myUserName}}さんようこそ！！</div>
+      <div>残高：{{myWalletAmount}}</div>
     </div>
     <h1>ユーザ一覧</h1>
     <div>
@@ -15,9 +15,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="user in users"
-            v-bind:key="user.user_id">
+          <tr v-for="user in users" v-bind:key="user.user_id">
             <td>{{user.user_name}}</td>
             <td>
               <b-button
@@ -30,29 +28,27 @@
                 type="button"
                 size="sm"
                 variant="btn btn-info"
-                v-on:click="giveMoney(user.user_id)"
+                v-on:click="giveMoney(user)"
               >送る</b-button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!--モーダルウィンドウ-->
+    <!--sendモーダル-->
     <Modal v-on:close="closeModal" v-if="walletModal">
-      <p>{{selectedUser}}さんの残高</p>
+      <p>{{selectedUser.user_name}}さんの残高</p>
       <div>{{walletAmount}}</div>
     </Modal>
+    <!--walletモーダル-->
     <Modal v-on:close="closeModal" v-if="sendModal">
-      <div>あなたの残高：{{amount}}</div>
+      <div>あなたの残高：{{myWalletAmount}}</div>
       <p>送る金額</p>
-      <div><input v-model="sendAmount"></div>
+      <div>
+        <input v-model="sendAmount">
+      </div>
       <template slot="footer">
-        <b-button
-          type="button"
-          size="sm"
-          variant="btn btn-danger"
-          v-on:click="sendMoney"
-        >送信</b-button>
+        <b-button type="button" size="sm" variant="btn btn-danger" v-on:click="sendMoney">送信</b-button>
       </template>
     </Modal>
   </div>
@@ -62,7 +58,8 @@
 import ErrMsg from "../components/ErrMsg";
 import firebase, { firestore } from "firebase";
 import { db } from "../plugins/firebase";
-import Modal from '../components/Modal.vue'
+import Modal from "../components/Modal.vue";
+import { getData, putData } from '../lib/definition/function.js';
 
 export default {
   name: "App",
@@ -76,136 +73,124 @@ export default {
       sendModal: false,
       walletModal: false,
       users: [],
-      selectedUser: '',
+      selectedUser: {},
       sendAmount: null,
       walletAmount: null
     };
   },
   computed: {
-    userName() {
+    myUserName() {
       return this.$store.state.auth.user
     },
-    amount() {
+    myUserId(){
+      return this.$store.state.auth.id
+    },
+    myWalletAmount() {
       return this.$store.state.wallet.amount
     }
   },
   methods: {
-    async giveMoney(userId) {
-      //モーダルウィンドウの表示
-      this.sendModal = true
-
-      this.selectedUser = userId
+    async giveMoney(user) {
+      this.sendModal = true;
+      this.selectedUser = user;
     },
     async getWallet(user) {
-      //モーダルウィンドウの表示
-      this.walletModal = true
-
-      this.selectedUser = user.user_name
+      this.walletModal = true;
 
       //wallet残高の取得
-      const querySnapshot = await db.collection('wallets').where('user_id', '==', user.user_id).get()
+      const walletData = await getData(db, 'wallets', ["user_id", "==", user.user_id])
       .catch(err => {
-        this.$store.commit('setErr', {errMsg: err.message})
+        this.$store.commit('setErr', {errMsg: err});
       });
-      querySnapshot.forEach(doc => {
-        this.walletAmount = doc.data().amount;
-      })
+      this.walletAmount = walletData[0].amount;
     },
     closeModal() {
       //モーダルウィンドウを非表示
-      this.sendModal = false
-      this.walletModal = false
+      this.sendModal = false;
+      this.walletModal = false;
 
       //初期化
-      this.sendAmount = null
-      this.walletAmount = null
-      this.selectedUser = ''
+      this.sendAmount = null;
+      this.walletAmount = null;
+      this.selectedUser = {};
     },
     async sendMoney() {
+      const senderUserId = this.myUserId;
+      const receiverUserId = this.selectedUser.user_id;
       const sendAmount = parseInt(this.sendAmount);
-      if(sendAmount < this.amount) {
-
-        let querySnapshot = await db.collection('wallets').where('user_id', '==', this.selectedUser).get()
+      
+      if (sendAmount < this.myWalletAmount) {
+        //wallet残高の取得
+        const walletData = await getData(db, 'wallets', ["user_id", "==", receiverUserId])
         .catch(err => {
-          this.$store.commit('setErr', {errMsg: err.message})
+          this.$store.commit('setErr', {errMsg: err});
         });
-        const recieverDocData = querySnapshot.docs.map(doc => {
-          return doc
-        });
-        const recieverDocId = recieverDocData[0].id;
+        const receiverWalletAmount = walletData[0].amount;
 
-        console.log(recieverDocData[0].id)
+        const newSenderWalletAmount = this.myWalletAmount - sendAmount;
+        const newReceiverWalletAmount = receiverWalletAmount + sendAmount;
 
-        //対象ドキュメントの参照を取得
-        const recieverDocRef = db.collection('wallets').doc(recieverDocId)
-
-        await db.runTransaction(async transaction => {
-          //対象ドキュメントを取得
-          const recieverDoc = await transaction.get(recieverDocRef);
-          //指定金額分加算
-          console.log(recieverDoc.data())
-          const newAmount = recieverDoc.data().amount + sendAmount;
-          //更新
-          await transaction.update(recieverDocRef, {amount: newAmount});
-        });
-
-        const myUserId = this.$store.state.auth.id;
-
-        querySnapshot = await db.collection('wallets').where('user_id', '==', myUserId).get()
+        putData(db, 'wallets', ["user_id", "==", receiverUserId], { amount: newReceiverWalletAmount })
         .catch(err => {
-          this.$store.commit('setErr', {errMsg: err.message})
-        });
-        const senderDocData = querySnapshot.docs.map(doc => {
-          return doc
-        });
-        const senderDocId = senderDocData[0].id;
-                console.log(senderDocId)
-
-        //対象ドキュメントの参照を取得
-        const senderDocRef = db.collection('wallets').doc(senderDocId)
-
-        await db.runTransaction(async transaction => {
-          //対象ドキュメントを取得
-          const senderDoc = await transaction.get(senderDocRef);
-          //指定金額分加算
-          const newAmount = senderDoc.data().amount - sendAmount;
-          //更新
-          await transaction.update(senderDocRef, {amount: newAmount});
+          this.$store.commit('setErr', {errMsg: err.message});
         });
 
-        //wallet情報の取得
-        querySnapshot = await db.collection('wallets').where('user_id', '==', myUserId).get()
+        putData(db, 'wallets', ["user_id", "==", senderUserId], { amount: newSenderWalletAmount })
         .catch(err => {
-          this.$store.commit('setErr', {errMsg: err.message})
-        });
-        const walletData = querySnapshot.docs.map(doc => {
-          return doc.data()
+          this.$store.commit('setErr', {errMsg: err.message});
         });
 
-        this.$store.commit('setWallet', {
-          amount: walletData[0].amount
+        this.$store.commit("setWallet", {
+          amount: newSenderWalletAmount
         });
-
-        this.closeModal()
-
       }
       else {
-        this.$store.commit('setErr', {errMsg: '有効な値を入力してください'})
-        this.closeModal()
+        this.$store.commit("setErr", { errMsg: "有効な値を入力してください" });
       }
+
+      this.closeModal();
     }
   },
-  created: async function(){
-    //DBよりユーザ一覧を取得
-    const querySnapshot = await db.collection('users').get()
-    .catch(err => {
-      this.$store.commit('setErr', {errMsg: err.message})
-    });
-    this.users = querySnapshot.docs.map(doc => {
-      return doc.data();
-    });
-    this.users.filter(user => {
-      return this.userName !== user.user_name;
+  created: function() {
+    firebase.auth().onAuthStateChanged(async user => {
+      //ログイン情報ありの場合
+      if(user){
+        const myUserId = user.uid;
+        
+        //ユーザ一覧を取得
+        const users = await getData(db, 'users')
+        .then(users => {
+          //ユーザデータの切り分け
+          this.users = users.filter(user => {
+            if(myUserId === user.user_id){
+              this.$store.commit('signIn', {
+                user: user.user_name,
+                id: user.user_id,
+                type: user.user_type
+              });
+            }
+            return myUserId !== user.user_id;
+          });
+        })
+        .catch(err => {
+          this.$store.commit('setErr', {errMsg: err.message});
+        });
+
+        //wallet情報取得
+        getData(db, 'wallets', ["user_id", "==", myUserId])
+        .then(walletData => {
+          this.$store.commit('setWallet', {
+            amount: walletData[0].amount
+          });
+        })
+        .catch(err => {
+          this.$store.commit('setErr', {errMsg: err});
+        });
+      }
+      //ログイン情報なしの場合
+      else{
+        this.$router.push('/signIn');
+      }
     });
   }
 };
@@ -217,10 +202,10 @@ table {
   border-collapse: collapse;
   font-size: 20px;
 }
-h1{
+h1 {
   margin-bottom: 20px;
 }
-.user-info-area{
+.user-info-area {
   margin: 50px 100px;
   font-size: 22px;
   display: flex;

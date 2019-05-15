@@ -36,7 +36,7 @@
 import ErrMsg from "../components/ErrMsg";
 import firebase from "firebase";
 import { db } from "../plugins/firebase";
-import { UserType, DefaultAmount } from '../lib/definition/enum.js';
+import { USER_TYPE, DEFAULT_AMOUNT } from '../lib/definition/enum.js';
 
 export default {
   name: "App",
@@ -64,7 +64,7 @@ export default {
         user_id: userData.uid,
         user_name: this.user,
         user_email: this.email,
-        user_type: UserType.General,
+        user_type: USER_TYPE.GENERAL,
       })
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
@@ -73,21 +73,10 @@ export default {
       //walletの生成
       db.collection("wallets").add({
         user_id: userData.uid,
-        amount: DefaultAmount
+        amount: DEFAULT_AMOUNT
       })
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
-      });
-
-      //ストアへ保存
-      this.$store.commit('signIn', {
-        id: userData.uid,
-        user: this.user,
-        type: UserType.General
-      });
-
-      this.$store.commit('setWallet', {
-        amount: DefaultAmount
       });
 
       //index画面へ遷移
