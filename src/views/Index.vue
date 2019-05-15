@@ -3,7 +3,15 @@
     <ErrMsg/>
     <div class="user-info-area">
       <div>{{myUserName}}さんようこそ！！</div>
-      <div>残高：{{myWalletAmount}}</div>
+      <div class="user-info">
+        <div class="user-info-amount">残高：{{myWalletAmount}}</div>
+        <div><b-button
+                type="button"
+                size="sm"
+                variant="outline-primary"
+                v-on:click="signOut"
+              >ログアウト</b-button></div>
+      </div>
     </div>
     <h1>ユーザ一覧</h1>
     <div>
@@ -149,6 +157,19 @@ export default {
       }
 
       this.closeModal();
+    },
+    signOut() {
+      firebase.auth().onAuthStateChanged(async user => {
+        //ログイン情報ありの場合
+        if(user){
+          await firebase.auth().signOut()
+          .catch(err => {
+          this.$store.commit('setErr', {errMsg: err.message});
+          });
+        }
+        this.$store.commit('signOut');
+        this.$router.push('/signIn');
+      });
     }
   },
   created: function() {
@@ -210,5 +231,11 @@ h1 {
   font-size: 22px;
   display: flex;
   justify-content: space-between;
+}
+.user-info{
+  display: flex;
+}
+.user-info-amount{
+  margin-right: 20px;
 }
 </style>
