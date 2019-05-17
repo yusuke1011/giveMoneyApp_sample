@@ -33,10 +33,10 @@
 </template>
 
 <script>
-import ErrMsg from "../components/ErrMsg";
-import firebase from "firebase";
-import { db } from "../plugins/firebase";
-import { USER_TYPE, DEFAULT_AMOUNT } from '../lib/definition/enum.js';
+import ErrMsg from "../components/ErrMsg"
+import firebase from "firebase"
+import { db } from "../plugins/firebase"
+import { USER_TYPE, DEFAULT_AMOUNT } from '../lib/definition/enum.js'
 
 export default {
   name: "App",
@@ -49,7 +49,7 @@ export default {
       user: '',
       email: '',
       pass: ''
-    };
+    }
   },
   methods: {
     async signUp() {
@@ -57,7 +57,7 @@ export default {
       const userData = await firebase.auth().createUserWithEmailAndPassword(this.email, this.pass)
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
-      });
+      })
       
       //userの生成
       db.collection("users").add({
@@ -68,7 +68,7 @@ export default {
       })
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
-      });
+      })
 
       //walletの生成
       db.collection("wallets").add({
@@ -77,13 +77,13 @@ export default {
       })
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
-      });
+      })
 
       //index画面へ遷移
-      this.$router.push('/');
+      this.$router.push('/')
     }
   }
-};
+}
 </script>
 
 <style scoped>

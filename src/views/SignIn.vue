@@ -29,11 +29,11 @@
 </template>
 
 <script>
-import ErrMsg from "../components/ErrMsg";
-import "../lib/definition/enum.js";
-import firebase from "firebase";
-import { db } from "../plugins/firebase";
-import { getData } from '../lib/definition/function.js';
+import ErrMsg from "../components/ErrMsg"
+import "../lib/definition/enum.js"
+import firebase from "firebase"
+import { db } from "../plugins/firebase"
+import { getData } from '../lib/definition/function.js'
 
 export default {
   name: "App",
@@ -46,7 +46,7 @@ export default {
       user: '',
       email: '',
       pass: ''
-    };
+    }
   },
   methods: {
     async signIn() {
@@ -54,13 +54,13 @@ export default {
       await firebase.auth().signInWithEmailAndPassword(this.email, this.pass)
       .catch(err => {
         this.$store.commit('setErr', {errMsg: err.message})
-      });
+      })
       
       //index画面へ遷移
-      this.$router.push('/');
+      this.$router.push('/')
     }
   }
-};
+}
 </script>
 
 <style scoped>

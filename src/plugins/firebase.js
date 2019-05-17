@@ -11,10 +11,10 @@ const firebaseConfig = {
   storageBucket: "test-fc28b.appspot.com",
   messagingSenderId: "726783818688",
   appId: "1:726783818688:web:ae39775ad22936ae"
-};
+}
 
 // Firebaseの初期化
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig)
 
 //firestoreの初期化
-export const db = firebase.firestore();
+export const db = firebase.firestore()

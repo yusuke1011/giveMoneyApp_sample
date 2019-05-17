@@ -7,7 +7,7 @@ import SignUp from '@/views/SignUp.vue'
 import Index from '@/views/Index.vue'
 
 //プラグインとして登録
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
 //VueRouterインスタンスを生成
 const router = new VueRouter({
