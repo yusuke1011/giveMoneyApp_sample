@@ -158,6 +158,8 @@ export default {
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message})
         })  
+
+        this.$store.commit('initErr')
       }
       //受け渡す金額が残高より多い場合、文字列が入力された場合など
       else {

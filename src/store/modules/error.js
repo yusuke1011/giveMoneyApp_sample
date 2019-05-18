@@ -5,6 +5,10 @@ const state = {
 const mutations = {
     setErr(state, payload) {
         state.errMsg = payload.errMsg
+    },
+
+    initErr(state) {
+        state.errMsg = ''
     }
 }
 
