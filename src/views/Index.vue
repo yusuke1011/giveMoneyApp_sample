@@ -195,24 +195,25 @@ export default {
         const myUserId = user.uid
 
         //user情報をセット
-        await this.$store.dispatch('getUserData', myUserId)
+        this.$store.dispatch('getUserData', myUserId)
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message})
         })  
 
         //wallet情報をセット
-        await this.$store.dispatch('getWalletData', user.uid)
+        this.$store.dispatch('getWalletData', myUserId)
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message})
         })
 
         //ユーザ一覧を取得
-        const users = await getData(db, 'users')
+        getData(db, 'users')
+        .then(users => {
+          this.users = users.filter(user => myUserId !== user.user_id)
+        })
         .catch(err => {
           this.$store.commit('setErr', {errMsg: err.message})
         })  
-        
-        this.users = users.filter(user => myUserId !== user.user_id)
       }
       //ログイン情報なしの場合
       else{
